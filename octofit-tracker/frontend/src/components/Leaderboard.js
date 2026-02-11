@@ -1,7 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function Leaderboard() {
   const [activeTab, setActiveTab] = useState('individual');
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
+  const fetchLeaderboard = async () => {
+    try {
+      setLoading(true);
+      // Construct API URL using environment variable for codespace
+      const codespace = process.env.REACT_APP_CODESPACE_NAME || process.env.CODESPACE_NAME;
+      const apiUrl = codespace 
+        ? `https://${codespace}-8000.app.github.dev/api/leaderboard/`
+        : 'http://localhost:8000/api/leaderboard/';
+      
+      console.log('Fetching leaderboard from:', apiUrl);
+      
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      // Handle both paginated (.results) and plain array responses
+      setLeaderboardData(Array.isArray(data) ? data : (data.results || []));
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching leaderboard:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const individualLeaders = [
     { rank: 1, name: 'Emily Davis', activities: 45, calories: 5600, streak: 14, badge: '🥇' },
@@ -22,9 +57,27 @@ function Leaderboard() {
     { rank: 5, name: 'Weekend Warriors', members: 6, activities: 98, calories: 8900, badge: '' }
   ];
 
+  if (loading) {
+    return (
+      <div className="container mt-4">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mt-4">
       <h1 className="mb-4">Leaderboard</h1>
+
+      {error && (
+        <div className="alert alert-warning" role="alert">
+          Using mock data. API Error: {error}
+        </div>
+      )}
 
       {/* Tabs */}
       <ul className="nav nav-tabs mb-4">

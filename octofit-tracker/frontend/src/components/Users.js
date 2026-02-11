@@ -3,14 +3,55 @@ import React, { useState, useEffect } from 'react';
 function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error] = useState(null);
+  const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  // Mock data for demonstration (replace with API call)
+  // Fetch users from API
   useEffect(() => {
-    // Simulate API call
-    const mockUsers = [
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      // Construct API URL using environment variable for codespace
+      const codespace = process.env.REACT_APP_CODESPACE_NAME || process.env.CODESPACE_NAME;
+      const apiUrl = codespace 
+        ? `https://${codespace}-8000.app.github.dev/api/users/`
+        : 'http://localhost:8000/api/users/';
+      
+      console.log('Fetching users from:', apiUrl);
+      
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      // Handle both paginated (.results) and plain array responses
+      const usersData = Array.isArray(data) ? data : (data.results || []);
+      
+      // If API returns data, use it; otherwise use mock data
+      if (usersData.length > 0) {
+        setUsers(usersData);
+      } else {
+        // Fallback to mock data if API returns empty
+        setUsers(getMockUsers());
+      }
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      setError(err.message);
+      // Use mock data on error
+      setUsers(getMockUsers());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getMockUsers = () => {
+    return [
       { 
         id: 1, 
         name: 'Tony Stark', 
@@ -122,12 +163,7 @@ function Users() {
         total_points: 1390
       }
     ];
-
-    setTimeout(() => {
-      setUsers(mockUsers);
-      setLoading(false);
-    }, 500);
-  }, []);
+  };
 
   const handleViewUser = (user) => {
     setSelectedUser(user);
@@ -150,18 +186,13 @@ function Users() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="container mt-4">
-        <div className="alert alert-danger" role="alert">
-          Error loading users: {error}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="container mt-4">
+      {error && (
+        <div className="alert alert-warning" role="alert">
+          Using mock data. API Error: {error}
+        </div>
+      )}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>All Users</h1>
         <button className="btn btn-primary">

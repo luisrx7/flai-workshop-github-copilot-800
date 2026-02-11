@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 function Teams() {
   const [teams, setTeams] = useState([
@@ -21,6 +21,44 @@ function Teams() {
       description: 'Justice League United'
     }
   ]);
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchTeams();
+  }, []);
+
+  const fetchTeams = async () => {
+    try {
+      setLoading(true);
+      // Construct API URL using environment variable for codespace
+      const codespace = process.env.REACT_APP_CODESPACE_NAME || process.env.CODESPACE_NAME;
+      const apiUrl = codespace 
+        ? `https://${codespace}-8000.app.github.dev/api/teams/`
+        : 'http://localhost:8000/api/teams/';
+      
+      console.log('Fetching teams from:', apiUrl);
+      
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      // Handle both paginated (.results) and plain array responses
+      const teamsData = Array.isArray(data) ? data : (data.results || []);
+      if (teamsData.length > 0) {
+        setTeams(teamsData);
+      }
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching teams:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [myTeam] = useState(teams[0]);
   const [showModal, setShowModal] = useState(false);
@@ -54,9 +92,27 @@ function Teams() {
     setShowModal(false);
   };
 
+  if (loading) {
+    return (
+      <div className="container mt-4">
+        <div className="text-center">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mt-4">
       <h1 className="mb-4">Teams</h1>
+
+      {error && (
+        <div className="alert alert-warning" role="alert">
+          Using mock data. API Error: {error}
+        </div>
+      )}
 
       {/* My Team Card */}
       <div className="card mb-4">
