@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'octofit_tracker',
 ]
 
 MIDDLEWARE = [
@@ -80,16 +79,19 @@ WSGI_APPLICATION = 'octofit_tracker.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
+# Using SQLite for Django's built-in tables (auth, sessions, admin)
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'octofit_db',
-        'ENFORCE_SCHEMA': False,
-        'CLIENT': {
-            'host': 'localhost',
-            'port': 27017,
-        }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
+}
+
+# MongoDB connection for application data
+MONGODB_SETTINGS = {
+    'host': 'localhost',
+    'port': 27017,
+    'database': 'octofit_db'
 }
 
 
