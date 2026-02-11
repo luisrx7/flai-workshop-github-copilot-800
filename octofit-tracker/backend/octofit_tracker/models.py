@@ -3,11 +3,15 @@ from djongo import models
 
 class User(models.Model):
     _id = models.ObjectIdField(primary_key=True)
-    username = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100, null=True, blank=True)
+    username = models.CharField(max_length=100, unique=True, null=True, blank=True)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=255)
+    password = models.CharField(max_length=255, null=True, blank=True)
+    alias = models.CharField(max_length=100, null=True, blank=True)
+    power = models.CharField(max_length=255, null=True, blank=True)
     team_id = models.IntegerField(null=True, blank=True)
     role = models.CharField(max_length=50, default='member')
+    total_points = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
