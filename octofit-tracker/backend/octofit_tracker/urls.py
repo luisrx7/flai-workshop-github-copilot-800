@@ -44,12 +44,19 @@ router.register(r'workouts', WorkoutViewSet)
 
 @api_view(['GET'])
 def api_root(request, format=None):
+    # Use environment-aware base URL
+    codespace_name = os.environ.get('CODESPACE_NAME')
+    if codespace_name:
+        api_base = f"https://{codespace_name}-8000.app.github.dev/api"
+    else:
+        api_base = f"{request.scheme}://{request.get_host()}/api"
+    
     return Response({
-        'users': reverse('user-list', request=request, format=format),
-        'teams': reverse('team-list', request=request, format=format),
-        'activities': reverse('activity-list', request=request, format=format),
-        'leaderboard': reverse('leaderboard-list', request=request, format=format),
-        'workouts': reverse('workout-list', request=request, format=format),
+        'users': f"{api_base}/users/",
+        'teams': f"{api_base}/teams/",
+        'activities': f"{api_base}/activities/",
+        'leaderboard': f"{api_base}/leaderboard/",
+        'workouts': f"{api_base}/workouts/",
     })
 
 
